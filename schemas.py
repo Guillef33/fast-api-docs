@@ -15,6 +15,8 @@ class ClientUpdate(BaseModel):
 
 class Client(ClientBase):
     id: int
+    class Config:
+        from_attributes = True
 
 class UserCreate(BaseModel):
     email: str
@@ -26,3 +28,23 @@ class UserResponse(BaseModel):
     
     class Config:
         from_attributes = True 
+
+class DocumentBase(BaseModel):
+    type: str
+    city: str | None = None
+
+class DocumentCreate(DocumentBase):
+    client_id: int
+
+class DocumentUpdate(BaseModel):
+    type: str | None = None
+    city: str | None = None
+
+class Document(DocumentBase):
+    id: int
+    client_id: int
+    client: Client 
+    
+    class Config:
+        from_attributes = True
+
