@@ -4,41 +4,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Clientes</title>
+    <title>Dashboard de Clientes</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 
-<body class="bg-gray-100 p-10">
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-    <div class="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
-        <div class="nav">
-            <a href="/logout">LogOut</a>
+    <nav class="bg-white shadow-md mb-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <button onclick="openModal('createModal')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition duration-300">
+                        <i class="fas fa-plus"></i> Nuevo Cliente
+                    </button>
+                </div>
 
+                <div class="text-xl font-bold text-gray-700">
+                    CRM Clientes
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-500 text-sm hidden sm:block">Usuario: {{ user.email }}</span>
+                    <a href="/logout" class="text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 transition duration-300">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </a>
+                </div>
+            </div>
         </div>
-        <h1 class="text-2xl font-bold mb-4 text-gray-800">Clientes Registrados</h1>
+    </nav>
 
+    <div class="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6 mb-10">
+        
         <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border border-gray-200">
+            <table class="min-w-full bg-white">
                 <thead>
-                    <tr class="bg-gray-50 border-b">
-                        <th class="py-2 px-4 text-left text-sm font-semibold text-gray-600">ID</th>
-                        <th class="py-2 px-4 text-left text-sm font-semibold text-gray-600">Nombre</th>
-                        <th class="py-2 px-4 text-left text-sm font-semibold text-gray-600">Email</th>
-                        <th class="py-2 px-4 text-left text-sm font-semibold text-gray-600">Teléfono</th>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">ID</th>
+                        <th class="py-3 px-6 text-left">Nombre</th>
+                        <th class="py-3 px-6 text-left">Email</th>
+                        <th class="py-3 px-6 text-left">Teléfono</th>
+                        <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-gray-600 text-sm font-light">
                     {% for client in clients %}
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="py-2 px-4 text-sm text-gray-700">{{ client.id }}</td>
-                        <td class="py-2 px-4 text-sm text-gray-700 font-medium">{{ client.name }}</td>
-                        <td class="py-2 px-4 text-sm text-gray-700">{{ client.email }}</td>
-                        <td class="py-2 px-4 text-sm text-gray-700">
-                            {% if client.phone %}
-                            {{ client.phone }}
-                            {% else %}
-                            <span class="text-gray-400 italic">Sin dato</span>
-                            {% endif %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap font-bold">{{ client.id }}</td>
+                        <td class="py-3 px-6 text-left">{{ client.name }}</td>
+                        <td class="py-3 px-6 text-left">{{ client.email }}</td>
+                        <td class="py-3 px-6 text-left">
+                            {% if client.phone %}{{ client.phone }}{% else %}<span class="text-gray-400 italic">--</span>{% endif %}
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <div class="flex item-center justify-center gap-3">
+                                <button onclick="openViewModal('{{ client.name }}', '{{ client.email }}', '{{ client.phone }}')" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                
+                                <button onclick="openEditModal('{{ client.id }}', '{{ client.name }}', '{{ client.email }}', '{{ client.phone }}')" class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                
+                                <button onclick="openDeleteModal('{{ client.id }}')" class="w-4 mr-2 transform hover:text-red-500 hover:scale-110">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -47,10 +78,212 @@
         </div>
 
         {% if not clients %}
-        <p class="text-center text-gray-500 mt-4">No hay clientes registrados.</p>
+        <div class="text-center py-10">
+            <p class="text-gray-500">No hay clientes registrados aún.</p>
+        </div>
         {% endif %}
     </div>
 
-</body>
+    <div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Nuevo Cliente</h3>
+                <form id="createForm" class="mt-2 text-left">
+                    <div class="mt-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Nombre</label>
+                        <input type="text" id="createName" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Email</label>
+                        <input type="email" id="createEmail" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Teléfono</label>
+                        <input type="text" id="createPhone" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="items-center px-4 py-3 mt-4">
+                        <button type="button" onclick="submitCreate()" class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                            Guardar
+                        </button>
+                        <button type="button" onclick="closeModal('createModal')" class="mt-3 px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
+    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Editar Cliente</h3>
+                <form id="editForm" class="mt-2 text-left">
+                    <input type="hidden" id="editId"> <div class="mt-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Nombre</label>
+                        <input type="text" id="editName" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Email</label>
+                        <input type="email" id="editEmail" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Teléfono</label>
+                        <input type="text" id="editPhone" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="items-center px-4 py-3 mt-4">
+                        <button type="button" onclick="submitEdit()" class="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300">
+                            Actualizar
+                        </button>
+                        <button type="button" onclick="closeModal('editModal')" class="mt-3 px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">¿Estás seguro?</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">
+                        Esta acción eliminará permanentemente al cliente. No se puede deshacer.
+                    </p>
+                </div>
+                <input type="hidden" id="deleteId">
+                <div class="items-center px-4 py-3">
+                    <button id="deleteBtn" onclick="submitDelete()" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+                        Sí, eliminar
+                    </button>
+                    <button onclick="closeModal('deleteModal')" class="mt-3 px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 text-center mb-4">Detalles del Cliente</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="bg-gray-50 p-3 rounded">
+                        <span class="font-bold text-gray-500 block">Nombre:</span>
+                        <span id="viewName" class="text-gray-800 text-lg"></span>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded">
+                        <span class="font-bold text-gray-500 block">Email:</span>
+                        <span id="viewEmail" class="text-gray-800"></span>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded">
+                        <span class="font-bold text-gray-500 block">Teléfono:</span>
+                        <span id="viewPhone" class="text-gray-800"></span>
+                    </div>
+                </div>
+                <div class="items-center px-4 py-3 mt-4">
+                    <button onclick="closeModal('viewModal')" class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Funciones para abrir/cerrar modales
+        function openModal(modalID) {
+            document.getElementById(modalID).classList.remove('hidden');
+        }
+
+        function closeModal(modalID) {
+            document.getElementById(modalID).classList.add('hidden');
+        }
+
+        // --- CREAR ---
+        async function submitCreate() {
+            const name = document.getElementById('createName').value;
+            const email = document.getElementById('createEmail').value;
+            const phone = document.getElementById('createPhone').value;
+
+            // Enviamos JSON al backend
+            const response = await fetch('/clients/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone })
+            });
+
+            if (response.ok) {
+                window.location.reload(); // Recargar para ver el cambio
+            } else {
+                alert("Error al crear cliente");
+            }
+        }
+
+        // --- EDITAR ---
+        // Esta función recibe los datos directamente del botón HTML
+        function openEditModal(id, name, email, phone) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPhone').value = (phone === 'None') ? '' : phone;
+            openModal('editModal');
+        }
+
+        async function submitEdit() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('editName').value;
+            const email = document.getElementById('editEmail').value;
+            const phone = document.getElementById('editPhone').value;
+
+            const response = await fetch(`/clients/${id}`, {
+                method: 'PUT', // Usamos PUT como se espera en una API REST
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone })
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert("Error al actualizar");
+            }
+        }
+
+        // --- ELIMINAR ---
+        function openDeleteModal(id) {
+            document.getElementById('deleteId').value = id;
+            openModal('deleteModal');
+        }
+
+        async function submitDelete() {
+            const id = document.getElementById('deleteId').value;
+            
+            const response = await fetch(`/clients/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert("Error al eliminar");
+            }
+        }
+
+        // --- VER ---
+        function openViewModal(name, email, phone) {
+            document.getElementById('viewName').innerText = name;
+            document.getElementById('viewEmail').innerText = email;
+            document.getElementById('viewPhone').innerText = (phone === 'None') ? 'Sin dato' : phone;
+            openModal('viewModal');
+        }
+    </script>
+
+</body>
 </html>
