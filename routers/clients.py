@@ -1,25 +1,26 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request 
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from typing import List
 
 # Importamos la configuración de la DB
 from database import get_db 
-# Importamos el modelo de tabla (ClientDB) y los esquemas Pydantic
 from models import ClientDB 
 from schemas import Client, ClientCreate, ClientUpdate
 
 router = APIRouter()
 
+templates = Jinja2Templates(directory="templates")
+
 # --- CREATE (POST) ---
 @router.post("/", response_model=Client)
 def create_client(client: ClientCreate, db: Session = Depends(get_db)):
-    # Creamos la instancia del modelo DB
+
     new_client = ClientDB(**client.dict())
     
-    # Agregamos y guardamos en la DB
     db.add(new_client)
     db.commit()
-    db.refresh(new_client) # Recargamos para obtener el ID generado por la DB
+    db.refresh(new_client) 
     
     return new_client
 
@@ -50,7 +51,7 @@ def update_client(client_id: int, data: ClientUpdate, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     
     # 2. Actualizar solo los campos enviados
-    update_data = data.dict(exclude_unset=True) # Ignorar valores nulos
+    update_data = data.dict(exclude_unset=True) 
     
     client_query.update(update_data, synchronize_session=False)
     
@@ -91,3 +92,15 @@ def seed_clients(db: Session = Depends(get_db)):
     
     db.commit()
     return {"message": "Clientes de ejemplo añadidos a Neon DB"}
+
+
+@router.get("/list", include_in_schema=False) # include_in_schema=False lo oculta del Swagger para no confundir
+def list_clients_html(request: Request, db: Session = Depends(get_db)):
+    # 1. Obtener datos de la DB
+    clients_list = db.query(ClientDB).all()
+    
+    # 2. Renderizar la plantilla
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "clients": clients_list
+    })
