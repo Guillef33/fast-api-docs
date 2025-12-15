@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Depends
-from database import engine, Base 
+from database import engine, Base, get_db
 from models import ClientDB       
 from routers import clients
 from fastapi.templating import Jinja2Templates
