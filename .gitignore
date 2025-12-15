@@ -1,0 +1,19 @@
+# Entornos virtuales
+venv/
+.env/
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+
+# FastAPI / Uvicorn
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db
