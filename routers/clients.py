@@ -94,13 +94,3 @@ def seed_clients(db: Session = Depends(get_db)):
     return {"message": "Clientes de ejemplo añadidos a Neon DB"}
 
 
-@router.get("/list", include_in_schema=False) # include_in_schema=False lo oculta del Swagger para no confundir
-def list_clients_html(request: Request, db: Session = Depends(get_db)):
-    # 1. Obtener datos de la DB
-    clients_list = db.query(ClientDB).all()
-    
-    # 2. Renderizar la plantilla
-    return templates.TemplateResponse("index.html", {
-        "request": request, 
-        "clients": clients_list
-    })
