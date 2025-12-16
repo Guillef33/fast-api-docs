@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import RedirectResponse
 from database import engine, Base, get_db
-from models import ClientDB, DocumentDB, User       
-from routers import clients, auth, documents
+from models import ClientDB, DocumentDB, User, InheritanceDB, HeirDB, AssetDB     
+from routers import clients, auth, documents, inheritances
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from dependencies import get_current_user, LoginRequired 
@@ -19,6 +19,12 @@ from dependencies import get_current_user, LoginRequired
 
 app.include_router(clients.router, prefix="/clients", tags=["clients"])
 app.include_router(documents.router, prefix="/documents", tags=["documents"])
+app.include_router(
+    inheritances.router, 
+    prefix="/inheritances", 
+    tags=["inheritances"],
+    dependencies=[Depends(get_current_user)] 
+)
 app.include_router(auth.router, tags=["auth"])
 
 @app.exception_handler(LoginRequired) 
@@ -39,16 +45,3 @@ def clients_list(request: Request, db: Session = Depends(get_db), user: User = D
         "clients": clients_list,
         "user": user
     })
-
-
-# @app.get("/documents/list") 
-# def documents_list(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-#     documents_list = db.query(DocumentDB).all()
-#     clients_list = db.query(ClientDB).all()
-    
-#     return templates.TemplateResponse("documents.html", {
-#         "request": request, 
-#         "documents": documents_list,
-#         "clients_list": clients_list,
-#         "user": user
-#     })

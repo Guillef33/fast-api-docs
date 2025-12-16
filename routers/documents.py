@@ -47,12 +47,7 @@ def view_documents(
     # Consultamos documentos para la tabla
     documents = db.query(DocumentDB).all()
     clients_list = db.query(ClientDB).all()
-
-    # Debug: imprimir para verificar
-    print(f"Clientes encontrados: {len(clients_list)}")
-    for client in clients_list:
-        print(f"- {client.name}")
-    
+   
     return templates.TemplateResponse("documents.html", {
         "request": request,
         "documents": documents,
@@ -69,25 +64,31 @@ def update_document(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_doc = db.query(DocumentDB).filter(DocumentDB.id == doc_id).first()
+    doc_query = db.query(DocumentDB).filter(DocumentDB.id == doc_id)
+    db_doc = doc_query.first()
+
     if not db_doc:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
 
     update_data = doc_update.dict(exclude_unset=True)
-    
-    # Validación de cliente si viene en el update
-    if 'client_id' in update_data:
-         if not db.query(ClientDB).filter(ClientDB.id == update_data['client_id']).first():
-             raise HTTPException(status_code=404, detail="Cliente inválido")
 
-    for key, value in update_data.items():
-        # Evitamos error si intentan actualizar 'name' que no existe en DB
-        if hasattr(db_doc, key):
-            setattr(db_doc, key, value)
+    doc_query.update(update_data, synchronize_session=False)
 
     db.commit()
     db.refresh(db_doc)
     return db_doc
+
+    # Validación de cliente si viene en el update
+    # if 'client_id' in update_data:
+    #      if not db.query(ClientDB).filter(ClientDB.id == update_data['client_id']).first():
+    #          raise HTTPException(status_code=404, detail="Cliente inválido")
+
+    # for key, value in update_data.items():
+    #     # Evitamos error si intentan actualizar 'name' que no existe en DB
+    #     if hasattr(db_doc, key):
+    #         setattr(db_doc, key, value)
+
+
 
 # --- 4. ELIMINAR (DELETE /{id}) ---
 @router.delete("/{doc_id}")
